@@ -190,17 +190,19 @@ void GeocodingClient::resolveLocalizedLocation(
     endpoint.setQuery(query);
 
     QNetworkRequest request{endpoint};
+    request.setRawHeader("Accept-Language", languageCode_.toUtf8());
     request.setHeader(
         QNetworkRequest::UserAgentHeader,
         QStringLiteral("WeatherScope/0.1"));
     request.setTransferTimeout(networkTransferTimeout);
+    const QString requestLanguageCode = languageCode_;
     QNetworkReply *const reply = networkAccessManager_.get(request);
     activeLocalizedLocationReply_ = reply;
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, requestLanguageCode]() {
         // Ignore completion from an aborted/replaced lookup, but always defer
         // deletion because QNetworkAccessManager owns the reply object.
         if (activeLocalizedLocationReply_ == reply) {
-            handleLocalizedLocationReply(*reply);
+            handleLocalizedLocationReply(*reply, requestLanguageCode);
             activeLocalizedLocationReply_.clear();
         }
         reply->deleteLater();
@@ -294,7 +296,9 @@ void GeocodingClient::handleReply(QNetworkReply &reply)
  * @pre reply is valid and finished on the affinity thread.
  * @post A callback occurs only when identity and coordinates are complete and valid.
  */
-void GeocodingClient::handleLocalizedLocationReply(QNetworkReply &reply)
+void GeocodingClient::handleLocalizedLocationReply(
+    QNetworkReply &reply,
+    const QString &requestLanguageCode)
 {
     // Without a successful transport and consumer there is no useful work to perform.
     if ((reply.error() != QNetworkReply::NoError) || !locationResolvedHandler_) {
@@ -354,6 +358,7 @@ void GeocodingClient::handleLocalizedLocationReply(QNetworkReply &reply)
     result.countryCode = address.value(QStringLiteral("country_code"))
                              .toString().trimmed().toUpper();
     result.adminArea = address.value(QStringLiteral("state")).toString().trimmed();
+    result.languageCode = requestLanguageCode;
     result.latitude = latitude;
     result.longitude = longitude;
     locationResolvedHandler_(result);

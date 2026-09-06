@@ -325,7 +325,7 @@ private:
     float targetGlobeRotationY_{-77.209F};
     double latitude_{28.6139};
     double longitude_{77.2090};
-    QString selectedLocationName_{QStringLiteral("Delhi")};
+    QString selectedLocationName_{QStringLiteral("New Delhi")};
     QString selectedCountry_{QStringLiteral("India")};
     QString selectedCountryCode_{QStringLiteral("IN")};
     QString locationText_{QStringLiteral("28.6139 N, 77.2090 E")};

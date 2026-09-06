@@ -236,7 +236,10 @@ WeatherMainViewModel::WeatherMainViewModel(
                             <= localizedLocationCoordinateTolerance
                         && std::abs(location.longitude - longitude_)
                             <= localizedLocationCoordinateTolerance;
-                    if (!matchesSelectedLocation) {
+                    const QString activeLanguageCode = languageCode(
+                        appLanguageForIndex(currentLanguageIndex_));
+                    if (!matchesSelectedLocation
+                        || (location.languageCode != activeLanguageCode)) {
                         return;
                     }
 
