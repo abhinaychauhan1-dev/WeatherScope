@@ -8,7 +8,7 @@
  * @version  : 1.0.0
  *
  * Copyright (c) 2024
- * Abhinay Chauhan. All rights reserved.
+ * All rights reserved.
  */
 
 #include "viewmodel/weather_shader_params.h"

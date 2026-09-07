@@ -4,12 +4,11 @@
  * @details Provides the function definitions declared by
  * weather_main_view_model.h. This implementation adapts asynchronous Model and
  * Service results into thread-affine Qt state for the QML presentation layer.
- * @author Abhinay Chauhan (email: chauhan089306@gmail.com)
- * @date 2026-09-06
- * @version 1.0.0
+ * @author   : Abhinay Chauhan (email: chauhan089306@gmail.com)
+ * @version  : 1.0.0
  *
  * Copyright (c) 2024
- * Abhinay Chauhan. All rights reserved.
+ * All rights reserved.
  */
 
 #include "viewmodel/weather_main_view_model.h"

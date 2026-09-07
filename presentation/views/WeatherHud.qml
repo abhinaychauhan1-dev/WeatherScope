@@ -13,12 +13,11 @@
  * size is 960 by 640 pixels, while the contained panels apply bounded,
  * content-aware sizing to remain usable as the viewport changes.
  *
- * \author Abhinay Chauhan (email: chauhan089306@gmail.com)
- * \since WeatherGlobe 1.0
- * Version: 1.0.0
+ * @author   : Abhinay Chauhan (email: chauhan089306@gmail.com)
+ * @version  : 1.0.0
  *
  * Copyright (c) 2024
- * Abhinay Chauhan. All rights reserved.
+ * All rights reserved.
  */
 
 import QtQuick

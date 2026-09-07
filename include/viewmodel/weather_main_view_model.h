@@ -12,11 +12,10 @@
  * ViewModel.
  *
  * @author   : Abhinay Chauhan (email: chauhan089306@gmail.com)
- * @date     : 2026-09-06
  * @version  : 1.0.0
  *
  * Copyright (c) 2024
- * Abhinay Chauhan. All rights reserved.
+ * All rights reserved.
  */
 
 /**

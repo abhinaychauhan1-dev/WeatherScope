@@ -1,6 +1,11 @@
 /**
  * @file     : weather_presentation_formatter.h
  * @brief    : Provides localized formatting shared by weather ViewModels.
+ * @author   : Abhinay Chauhan (email: chauhan089306@gmail.com)
+ * @version  : 1.0.0
+ *
+ * Copyright (c) 2024
+ * All rights reserved.
  */
 
 #pragma once
