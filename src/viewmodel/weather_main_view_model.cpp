@@ -202,6 +202,13 @@ WeatherMainViewModel::WeatherMainViewModel(
             QMetaObject::invokeMethod(
                 this,
                 [this, locations]() {
+                    const QString activeLanguageCode = languageCode(
+                        appLanguageForIndex(currentLanguageIndex_));
+                    if (!locations.empty()
+                        && (locations.front().languageCode != activeLanguageCode)) {
+                        return;
+                    }
+
                     QVariantList results{};
                     // Reserve once because one QVariantMap is emitted for each service result.
                     results.reserve(static_cast<qsizetype>(locations.size()));
@@ -245,17 +252,23 @@ WeatherMainViewModel::WeatherMainViewModel(
 
                     const QString localizedCityName = location.cityName.trimmed();
                     const QString localizedCountryName = location.country.trimmed();
-                    // Keep the previous usable label when the service returns incomplete data.
-                    if (localizedCityName.isEmpty() || localizedCountryName.isEmpty()) {
-                        return;
+                    bool locationNameChanged{false};
+                    if (!localizedCityName.isEmpty()
+                        && (selectedLocationName_ != localizedCityName)) {
+                        selectedLocationName_ = localizedCityName;
+                        locationNameChanged = true;
                     }
-
-                    selectedLocationName_ = localizedCityName;
-                    selectedCountry_ = localizedCountryName;
+                    if (!localizedCountryName.isEmpty()
+                        && (selectedCountry_ != localizedCountryName)) {
+                        selectedCountry_ = localizedCountryName;
+                        locationNameChanged = true;
+                    }
                     if (!location.countryCode.isEmpty()) {
                         selectedCountryCode_ = location.countryCode;
                     }
-                    emit locationChanged();
+                    if (locationNameChanged) {
+                        emit locationChanged();
+                    }
                 },
                 Qt::QueuedConnection);
         });
@@ -326,17 +339,17 @@ bool WeatherMainViewModel::weatherDataReady() const noexcept
 const QStringList &WeatherMainViewModel::supportedLanguages() const noexcept
 {
     static const QStringList languages{
-        QStringLiteral("English"),
-        QStringLiteral("Deutsch"),
-        QStringLiteral("Français"),
-        QStringLiteral("中文"),
-        QStringLiteral("Nederlands"),
-        QStringLiteral("Norsk"),
-        QStringLiteral("Svenska"),
-        QStringLiteral("日本語"),
-        QStringLiteral("한국어"),
-        QStringLiteral("Español"),
-        QStringLiteral("Italiano")};
+        QStringLiteral("English (en)"),
+        QStringLiteral("Deutsch (de)"),
+        QStringLiteral("Français (fr)"),
+        QStringLiteral("中文 (zh-CN)"),
+        QStringLiteral("Nederlands (nl)"),
+        QStringLiteral("Norsk (nb)"),
+        QStringLiteral("Svenska (sv)"),
+        QStringLiteral("日本語 (ja)"),
+        QStringLiteral("한국어 (ko)"),
+        QStringLiteral("Español (es)"),
+        QStringLiteral("Italiano (it)")};
     return languages;
 }
 
@@ -482,6 +495,7 @@ void WeatherMainViewModel::setLanguageIndex(const int languageIndex)
     currentLanguageIndex_ = languageIndex;
     repository_->setLanguageCode(isoLanguageCode);
     geocodingService_->setLanguageCode(isoLanguageCode);
+    emit locationSearchResults({});
     selectedCountry_ = localizedCountryName(
         isoLanguageCode,
         selectedCountryCode_,

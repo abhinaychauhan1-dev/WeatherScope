@@ -53,7 +53,9 @@ constexpr std::chrono::seconds networkTransferTimeout{30};
  * @pre reply remains alive for the duration of this call.
  * @post The reply payload has been consumed; malformed entries are omitted.
  */
-[[nodiscard]] std::vector<LocationResult> parseLocations(QNetworkReply &reply)
+[[nodiscard]] std::vector<LocationResult> parseLocations(
+    QNetworkReply &reply,
+    const QString &requestLanguageCode)
 {
     // Transport failures are represented as no suggestions; this adapter has no error channel.
     if (reply.error() != QNetworkReply::NoError) {
@@ -109,6 +111,7 @@ constexpr std::chrono::seconds networkTransferTimeout{30};
             ? countryCode.toString().trimmed().toUpper()
             : QString{};
         result.adminArea = adminArea.isString() ? adminArea.toString() : QString{};
+        result.languageCode = requestLanguageCode;
         result.latitude = latitudeValue;
         result.longitude = longitudeValue;
         results.push_back(result);
@@ -186,6 +189,7 @@ void GeocodingClient::resolveLocalizedLocation(
     query.addQueryItem(QStringLiteral("format"), QStringLiteral("jsonv2"));
     query.addQueryItem(QStringLiteral("zoom"), QStringLiteral("10"));
     query.addQueryItem(QStringLiteral("addressdetails"), QStringLiteral("1"));
+    query.addQueryItem(QStringLiteral("namedetails"), QStringLiteral("1"));
     query.addQueryItem(QStringLiteral("accept-language"), languageCode_);
     endpoint.setQuery(query);
 
@@ -261,12 +265,13 @@ void GeocodingClient::requestLocations()
 
     QNetworkRequest request{endpoint};
     request.setTransferTimeout(networkTransferTimeout);
+    const QString requestLanguageCode = languageCode_;
     QNetworkReply *const reply = networkAccessManager_.get(request);
     activeReply_ = reply;
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, requestLanguageCode]() {
         // Only the latest query may publish results or clear the tracked reply.
         if (activeReply_ == reply) {
-            handleReply(*reply);
+            handleReply(*reply, requestLanguageCode);
             activeReply_.clear();
         }
         reply->deleteLater();
@@ -279,9 +284,11 @@ void GeocodingClient::requestLocations()
  * @pre reply is valid and finished on the affinity thread.
  * @post Registered consumers and Qt observers receive the same result snapshot.
  */
-void GeocodingClient::handleReply(QNetworkReply &reply)
+void GeocodingClient::handleReply(
+    QNetworkReply &reply,
+    const QString &requestLanguageCode)
 {
-    const std::vector<LocationResult> results = parseLocations(reply);
+    const std::vector<LocationResult> results = parseLocations(reply, requestLanguageCode);
 
     if (resultsHandler_) {
         resultsHandler_(results);
@@ -318,26 +325,12 @@ void GeocodingClient::handleLocalizedLocationReply(
     }
 
     const QJsonObject address = addressValue.toObject();
-    const QStringList cityKeys{
-        QStringLiteral("city"),
-        QStringLiteral("town"),
-        QStringLiteral("village"),
-        QStringLiteral("municipality"),
-        QStringLiteral("county")};
-    QString cityName{};
-    // Nominatim varies the locality key by settlement type; choose the most
-    // specific available label in a deterministic preference order.
-    for (const QString &cityKey : cityKeys) {
-        const QJsonValue cityValue = address.value(cityKey);
-        if (cityValue.isString() && !cityValue.toString().trimmed().isEmpty()) {
-            cityName = cityValue.toString().trimmed();
-            break;
-        }
-    }
-
+    const QJsonObject nameDetails = resultObject.value(QStringLiteral("namedetails")).toObject();
+    const QString localizedNameKey = QStringLiteral("name:%1").arg(requestLanguageCode);
+    const QString localizedFeatureName = nameDetails.value(localizedNameKey)
+                                             .toString().trimmed();
     const QString country = address.value(QStringLiteral("country")).toString().trimmed();
-    // A location label without both city and country is unsuitable for the HUD.
-    if (cityName.isEmpty() || country.isEmpty()) {
+    if (country.isEmpty()) {
         return;
     }
 
@@ -353,7 +346,10 @@ void GeocodingClient::handleLocalizedLocationReply(
     }
 
     LocationResult result{};
-    result.cityName = cityName;
+    // An absent language-specific feature name means the provider only knows
+    // its local-script name. Leave it empty so the ViewModel preserves the
+    // exact forward-geocoding selection instead of showing a mixed locale.
+    result.cityName = localizedFeatureName;
     result.country = country;
     result.countryCode = address.value(QStringLiteral("country_code"))
                              .toString().trimmed().toUpper();

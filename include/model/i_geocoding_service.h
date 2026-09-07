@@ -36,7 +36,7 @@ struct LocationResult
     QString countryCode{};
     /** @brief Localized state, province, or administrative area. */
     QString adminArea{};
-    /** @brief ISO language code used to resolve this label; empty for forward search results. */
+    /** @brief ISO language code used to resolve this search or lookup result. */
     QString languageCode{};
     /** @brief Latitude in decimal degrees, normally in the range [-90, 90]. */
     double latitude{0.0};

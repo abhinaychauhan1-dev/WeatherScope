@@ -62,8 +62,8 @@ signals:
 private:
     /** @brief Dispatches the pending query after the debounce interval. @return Nothing. @note Affinity-thread only; replaces any active search reply. */
     void requestLocations();
-    /** @brief Validates and parses a completed forward-geocoding reply. @param[in,out] reply Completed network reply scheduled for deletion after processing. @return Nothing. @note Affinity-thread only. */
-    void handleReply(QNetworkReply &reply);
+    /** @brief Validates and parses a completed forward-geocoding reply. @param[in,out] reply Completed network reply scheduled for deletion after processing. @param[in] requestLanguageCode Locale used by this request. @return Nothing. @note Affinity-thread only. */
+    void handleReply(QNetworkReply &reply, const QString &requestLanguageCode);
     /** @brief Validates and parses a completed reverse-geocoding reply. @param[in,out] reply Completed network reply scheduled for deletion after processing. @param[in] requestLanguageCode Locale used by this request. @return Nothing. @note Affinity-thread only. */
     void handleLocalizedLocationReply(
         QNetworkReply &reply,

@@ -168,16 +168,22 @@ Item {
                      * cleared first, and the text-change guard prevents a feedback search.
                      */
                     function selectSuggestion(suggestion) {
+                        const cityName = suggestion.cityName
+                        const country = suggestion.country
+                        const countryCode = suggestion.countryCode
+                        const latitude = suggestion.latitude
+                        const longitude = suggestion.longitude
+
+                        root.viewModel.selectLocation(
+                            cityName,
+                            country,
+                            countryCode,
+                            latitude,
+                            longitude)
                         root.locationDropdownOpen = false
                         root.locationSuggestions = []
                         root.acceptingLocationSuggestion = true
-                        citySearchField.text = suggestion.cityName
-                        root.viewModel.selectLocation(
-                            suggestion.cityName,
-                            suggestion.country,
-                            suggestion.countryCode,
-                            suggestion.latitude,
-                            suggestion.longitude)
+                        citySearchField.text = cityName
                     }
 
                     anchors.fill: parent
